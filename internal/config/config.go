@@ -2,39 +2,45 @@ package config
 
 import (
 	"flag"
-	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/spf13/viper"
+	"log"
 	"os"
 	"time"
 )
 
 type Config struct {
-	Env            string     `yaml:"env" env-default:"local"`
-	StoragePath    string     `yaml:"storage_path" env-required:"true"`
-	GRPC           GRPCConfig `yaml:"grpc"`
-	MigrationsPath string
-	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
+	Env      string        `mapstructure:"env"`
+	GRPC     GRPCConfig    `mapstructure:"grpc"`
+	DB       DBConfig      `mapstructure:"db"`
+	TokenTTL time.Duration `mapstructure:"token_ttl"`
 }
 
 type GRPCConfig struct {
-	Port    int           `yaml:"port"`
-	Timeout time.Duration `yaml:"timeout"`
+	Port    int           `mapstructure:"port"`
+	Timeout time.Duration `mapstructure:"timeout"`
 }
 
-func MustLoad() *Config {
-	configPath := fetchConfigPath()
-	if configPath == "" {
-		panic("config path is empty")
-	}
+type DBConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	DBName   string `mapstructure:"dbname"`
+	SSLMode  string `mapstructure:"sslmode"`
+}
 
-	// check if file exists
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		panic("config file does not exist: " + configPath)
+// MustLoad initializes and validates config from the config file
+func MustLoad() *Config {
+	configPath := fetchConfigPath() // Получаем путь к конфигурационному файлу
+	viper.SetConfigFile(configPath) // Указываем полный путь к файлу конфигурации
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Error reading config file: %s", err)
 	}
 
 	var cfg Config
-
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		panic("config path is empty: " + err.Error())
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Fatalf("Unable to decode into struct: %s", err)
 	}
 
 	return &cfg

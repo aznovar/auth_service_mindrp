@@ -1,7 +1,9 @@
 package authservice
 
 import (
+	"auth_service/internal/app"
 	"auth_service/internal/config"
+	"auth_service/internal/lib/handlers/slogpretty"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -20,7 +22,7 @@ func main() {
 
 	log := setupLogger(cfg.Env)
 
-	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+	application := app.New(log, cfg)
 
 	go func() {
 		application.GRPCServer.MustRun()
@@ -66,25 +68,4 @@ func setupPrettySlog() *slog.Logger {
 	handler := opts.NewPrettyHandler(os.Stdout)
 
 	return slog.New(handler)
-}
-
-func setupLogger(env string) *slog.Logger {
-	var log *slog.Logger
-
-	switch env {
-	case envLocal:
-		log = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envDev:
-		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envProd:
-		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
-		)
-	}
-
-	return log
 }

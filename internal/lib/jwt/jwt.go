@@ -16,7 +16,6 @@ func NewToken(user models.User, app models.App, duration time.Duration) (string,
 	claims["socialId"] = user.SocialId
 	claims["email"] = user.Email
 	claims["exp"] = time.Now().Add(duration).Unix()
-	claims["app_id"] = app.ID
 
 	// Подписываем токен, используя секретный ключ приложения
 	tokenString, err := token.SignedString([]byte(app.Secret))
