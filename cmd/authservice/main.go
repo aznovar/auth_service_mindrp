@@ -1,4 +1,4 @@
-package authservice
+package main
 
 import (
 	"auth_service/internal/app"
