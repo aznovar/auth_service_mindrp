@@ -33,6 +33,10 @@ jobs:
             echo "error: Tag '${{ github.event.inputs.tag }}' not found"
             exit 1
           fi
+          
+      - name: Create deployment directory
+        run: mkdir -p ${{ github.workspace }}/deployment
+        
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
