@@ -33,10 +33,6 @@ jobs:
             echo "error: Tag '${{ github.event.inputs.tag }}' not found"
             exit 1
           fi
-          
-      - name: Create deployment directory
-        run: mkdir -p ${{ github.workspace }}/deployment
-        
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -45,6 +41,13 @@ jobs:
         run: |
           go mod download
           go build -o grpc-auth ./cmd/authservice
+      - name: Move built app to deployment directory
+        run: |
+          mkdir -p ${{ github.workspace }}/deployment
+          mv ${{ github.workspace }}/grpc-auth ${{ github.workspace }}/deployment/
+      - name: Verify built app
+        run: |
+          ls -la ${{ github.workspace }}/deployment     
       - name: Build migrator
         run: |
           go build -o migrator ./cmd/migrator
