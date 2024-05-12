@@ -1,0 +1,12 @@
+env: "dev"
+grpc:
+  port: 44044
+  timeout: 10h
+db:
+  host: "45.89.188.154"
+  port: 5432
+  user: "mindrpauth"
+  password: "1234"
+  dbname: "mindrpauth"
+  sslmode: "disable"
+token_ttl: 1h

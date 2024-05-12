@@ -28,7 +28,7 @@ type DBConfig struct {
 // Конструктор Storage для PostgreSQL
 func New(cfg config.DBConfig) (*Storage, error) {
 	const op = "storage.postgres.New"
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName)
 
 	db, err := sql.Open("postgres", dsn)
@@ -44,17 +44,17 @@ func New(cfg config.DBConfig) (*Storage, error) {
 func (s *Storage) SaveUser(ctx context.Context, socialId string, email string, passHash []byte) (int64, error) {
 	const op = "storage.postgres.SaveUser"
 
-	// Запрос на добавление пользователя для таблица Users
-	query := "INSERT INTO users(social_club_id,email, password_hash) VALUES($1, $2, $3)"
+	// Добавляем CURRENT_TIMESTAMP для колонки created_at
+	query := "INSERT INTO users (social_club_id, email, password_hash, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING user_id"
 	var id int64
 
 	err := s.db.QueryRowContext(ctx, query, socialId, email, passHash).Scan(&id)
 	if err != nil {
 		var pqErr *pq.Error
-		if errors.As(err, &pqErr) && pqErr.Code == "23505" { // 23505 - код ошибки unique_violation в PostgreSQL
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" { // Обработка ошибки уникальности
 			return 0, fmt.Errorf("%s: %w", op, storage.ErrUserExists)
 		}
-		return 0, fmt.Errorf("%s: %w", op, err)
+		return 0, fmt.Errorf("%s: %w", op, err) // Общая обработка ошибок
 	}
 
 	return id, nil
