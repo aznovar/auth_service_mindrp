@@ -19,6 +19,7 @@ jobs:
       DB_NAME: mindrpauth
       DB_USER: mindrpauth
       DB_PASSWORD: 1234
+      MIGRATIONS_PATH: ./migrations
 
 
     steps:
